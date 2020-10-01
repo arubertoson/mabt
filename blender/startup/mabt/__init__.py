@@ -4,6 +4,7 @@ import bpy
 
 _modules = [
     "object",
+    "view",
 ]
 
 __import__(name=__name__, fromlist=_modules)
@@ -26,4 +27,3 @@ def unregister():
     for mod in reversed(_modules_loaded):
         for cls in reversed(mod._classes):
             uregister_class(cls)
-            

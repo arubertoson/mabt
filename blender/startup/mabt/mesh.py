@@ -1,41 +1,44 @@
 """
 Quaternion experimentation
 """
+import time
+import collections
+
 import bpy
+import bmesh
 import mathutils
 
 
-def main():
-    print(bpy.context.scene.objects)
+def get_islands(mesh_data):
+    """"""
+    bm = bmesh.new()
+    bm.from_mesh(mesh_data)
 
-    view_vector = mathutils.Vector((0.0, 0.2, -0.99))
-    axis = mathutils.Vector((0, 0, -1))
+    island_idx = 0
+    islands = collections.defaultdict(set)
+    tag = [False] * len(bm.verts)
 
-    q = mathutils.Quaternion(0, 1, 0, 0)
-    q.copy
-    q.normalized
+    for v in bm.verts:
 
-    q.to_euler().to_quaternion()
+        if tag[v.index]:
+            continue
 
-    mat = mathutils.Matrix()
+        verts = set([v])
+        while verts:
 
+            current_vert = verts.pop()
+            if tag[current_vert.index]:
+                continue
 
-def camera_position(matrix):
-    """ From 4x4 matrix, calculate camera location """
-    t = (matrix[0][3], matrix[1][3], matrix[2][3])
-    r = (
-        (matrix[0][0], matrix[0][1], matrix[0][2]),
-        (matrix[1][0], matrix[1][1], matrix[1][2]),
-        (matrix[2][0], matrix[2][1], matrix[2][2]),
-    )
-    rp = (
-        (-r[0][0], -r[1][0], -r[2][0]),
-        (-r[0][1], -r[1][1], -r[2][1]),
-        (-r[0][2], -r[1][2], -r[2][2]),
-    )
-    output = (
-        rp[0][0] * t[0] + rp[0][1] * t[1] + rp[0][2] * t[2],
-        rp[1][0] * t[0] + rp[1][1] * t[1] + rp[1][2] * t[2],
-        rp[2][0] * t[0] + rp[2][1] * t[1] + rp[2][2] * t[2],
-    )
-    return output
+            tag[current_vert.index] = True
+
+            for edge in current_vert.link_edges:
+                for vert in edge.verts:
+                    if tag[vert.index]:
+                        continue
+
+                    verts.add(vert)
+                    islands[island_idx].add(vert)
+
+        island_idx += 1
+    return islands
